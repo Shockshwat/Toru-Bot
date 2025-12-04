@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @bot.event
 async def on_message(message):
-    if message.channel.id == 1005760529400352788:
+    # if message.channel.id == 1005760529400352788:
         if message.author.bot:
             return
 
@@ -16,14 +16,15 @@ async def on_message(message):
             f"Processing message from channel {message.channel.id}: {message.content}"
         )
         status_pattern = re.compile(
-            r"(?i)^(.+?)\s+ch(\d+(?:\.\d+)?)\s+([A-Za-z]+)\s+(Done|Working|Help)$"
+            r"(?i)^(Done|Working|Help)\s+([A-Za-z]+)\s+ch(\d+(?:\.\d+)?)\s+(.+)$"
         )
-        match = status_pattern.match(message.content)
+        reversed_message = ' '.join(reversed(message.content.split()))
+        match = status_pattern.match(reversed_message)
         if match:
-            name = match.group(1)
-            chapter_number = match.group(2)
-            task = match.group(3)
-            status = match.group(4).capitalize()
+            status = match.group(1).capitalize()
+            task = match.group(2)
+            chapter_number = match.group(3)
+            name = ' '.join(reversed(match.group(4).split()))
 
             response = {
                 "Name": name,

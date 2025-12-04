@@ -1,4 +1,3 @@
-import discord
 import os 
 import logging
 from dotenv import load_dotenv
