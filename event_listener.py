@@ -16,15 +16,15 @@ async def on_message(message):
             f"Processing message from channel {message.channel.id}: {message.content}"
         )
         status_pattern = re.compile(
-            r"(?i)^(Done|Working|Help)\s+([A-Za-z]+)\s+ch(\d+(?:\.\d+)?)\s+(.+)$"
+            r"(?i)^(.+?)\s+ch\s*(\d+(?:\.\d+)?)\s+([A-Za-z]+)\s+(Done|Working|Help)$"
         )
-        reversed_message = ' '.join(reversed(message.content.split()))
-        match = status_pattern.match(reversed_message)
+        cleaned = ' '.join(message.content.split())
+        match = status_pattern.match(cleaned)
         if match:
-            status = match.group(1).capitalize()
-            task = match.group(2)
-            chapter_number = match.group(3)
-            name = ' '.join(reversed(match.group(4).split()))
+            name = match.group(1)
+            chapter_number = match.group(2)
+            task = match.group(3)
+            status = match.group(4).capitalize()
 
             response = {
                 "Name": name,

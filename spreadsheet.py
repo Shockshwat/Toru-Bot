@@ -85,7 +85,7 @@ def find_row_by_chapter_by_title(sheet_title: str, chapter_value: str | int | fl
             return idx
     return None
 
-def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | float, task: str, user_name: str, status: str) -> dict:
+def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | float, task: str, user_name: str, status: str, replace: bool = False, replace_col: int | None = None) -> dict:
     try:
         ws = sh.worksheet(sheet_title)
     except gspread.WorksheetNotFound:
@@ -102,16 +102,19 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
     name_cols, status_col = cols
     
     if len(name_cols) == 1:
-        existing_name = ws.cell(row_idx, name_cols[0]).value
+        target_col = name_cols[0]
+        existing_name = ws.cell(row_idx, target_col).value
         if existing_name and str(existing_name).strip():
-            logger.warning(f'Single name column at ch{chapter_value} {task} is occupied by "{existing_name}"')
-            return {
-                "success": False,
-                "collision": True,
-                "existing_name": existing_name,
-                "message": f"This task is already assigned to {existing_name}. Would you like to replace them?"
-            }
-        ws.update_cell(row_idx, name_cols[0], user_name)
+            if not replace:
+                logger.warning(f'Single name column at ch{chapter_value} {task} is occupied by "{existing_name}"')
+                return {
+                    "success": False,
+                    "collision": True,
+                    "existing_name": existing_name,
+                    "replace_col": target_col,
+                    "message": f"This task is already assigned to {existing_name}. Would you like to replace them?"
+                }
+        ws.update_cell(row_idx, target_col, user_name)
         ws.update_cell(row_idx, status_col, status)
         logger.info(f'Updated "{sheet_title}" ch{chapter_value} {task}: {user_name} [{status}]')
         return {"success": True}
@@ -131,14 +134,22 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
                 if cell_value and str(cell_value).strip():
                     occupied_names.append(str(cell_value).strip())
             logger.warning(f'All name columns for ch{chapter_value} {task} are occupied: {occupied_names}')
-            return {
-                "success": False,
-                "collision": True,
-                "existing_names": occupied_names,
-                "message": f"All slots are occupied by: {', '.join(occupied_names)}. No space available."
-            }
+            if not replace:
+                return {
+                    "success": False,
+                    "collision": True,
+                    "existing_names": occupied_names,
+                    "replace_col": name_cols[0],
+                    "message": f"All slots are occupied by: {', '.join(occupied_names)}. Replace the first entry?"
+                }
+            target_col = replace_col if replace_col is not None else name_cols[0]
         
         ws.update_cell(row_idx, target_col, user_name)
         ws.update_cell(row_idx, status_col, status)
         logger.info(f'Updated "{sheet_title}" ch{chapter_value} {task}: {user_name} [{status}] at column {target_col}')
         return {"success": True, "column": target_col}
+
+def get_all_worksheet_titles() -> list[str]:
+    titles = [ws.title for ws in sh.worksheets()]
+    logger.debug(f'All worksheet titles: {titles}')
+    return titles

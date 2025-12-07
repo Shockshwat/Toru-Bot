@@ -7,9 +7,8 @@ conn = sqlite3.connect('toru.db')
 cursor = conn.cursor()
 logger.info('Database connection established')
 
-# cursor.execute("CREATE TABLE USERS (name TEXT PRIMARY KEY, scannname TEXT)")
-# cursor.execute("CREATE TABLE SERIES (sheet_name TEXT, name TEXT PRIMARY KEY)")
-# conn.commit()
+cursor.execute("CREATE TABLE IF NOT EXISTS USERS (name TEXT PRIMARY KEY, scannname TEXT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS SERIES (sheet_name TEXT, name TEXT PRIMARY KEY)")
 
 def add_user(name: str, scannname: str):
     cursor.execute("INSERT OR REPLACE INTO USERS (name, scannname) VALUES (?, ?)", (name, scannname))
