@@ -2,11 +2,12 @@
 Module for accessing and manipulating spreadsheet data.
 """
 import gspread
-import logging 
+import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-spreadsheet_id = "1C4nokf-Ip-lFMm6j9Al64kI1m5kOHEfTUBNv25gALlo"
+spreadsheet_id = str(os.getenv("SPREADSHEET_ID"))
 gc = gspread.service_account(filename="credentials.json")
 sh = gc.open_by_key(spreadsheet_id)
 
