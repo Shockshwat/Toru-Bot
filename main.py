@@ -1,4 +1,4 @@
-import os 
+import os
 import logging
 from dotenv import load_dotenv
 from bot_instance import bot
@@ -15,8 +15,6 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 token = str(os.getenv("TOKEN"))
-
-import event_listener
 
 @bot.event
 async def on_ready():
