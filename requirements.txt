@@ -1,4 +1,4 @@
 python-dotenv
-pycord
+py-cord[speed]
 gspread
 thefuzz
