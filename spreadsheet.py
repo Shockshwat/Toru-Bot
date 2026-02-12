@@ -2,11 +2,12 @@
 Module for accessing and manipulating spreadsheet data.
 """
 import gspread
-import logging 
+import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-spreadsheet_id = "1C4nokf-Ip-lFMm6j9Al64kI1m5kOHEfTUBNv25gALlo"
+spreadsheet_id = str(os.getenv("SPREADSHEET_ID"))
 gc = gspread.service_account(filename="credentials.json")
 sh = gc.open_by_key(spreadsheet_id)
 
@@ -68,8 +69,8 @@ def get_task_columns_by_title(sheet_title: str, task: str) -> tuple[list[int], i
             logger.debug(f'Found status column at {col_idx}')
             break
     
-    if not name_cols or status_col is None:
-        logger.error(f'Could not find Name/Status columns for task "{task}" in "{sheet_title}". Found name_cols={name_cols}, status_col={status_col}')
+    if status_col is None:
+        logger.error(f'Could not find Status columns for task "{task}" in "{sheet_title}". Found name_cols={name_cols}, status_col={status_col}')
         logger.debug(f'Sub-headers from col {start_col} to {next_task_col}: {sub_headers[start_col-1:next_task_col-1]}')
         return None
     
@@ -100,12 +101,16 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
         logger.error(f'Task "{task}" columns not found in "{sheet_title}"')
         return {"success": False, "error": "Task columns not found"}
     name_cols, status_col = cols
-    
-    if len(name_cols) == 1:
+
+    if len(name_cols) == 0:
+        ws.update_cell(row_idx, status_col, status)
+        logger.info(f'Updated "{sheet_title}" ch{chapter_value} {task}: [{status}]')
+        return {"success": True}
+    elif len(name_cols) == 1:
         target_col = name_cols[0]
         existing_name = ws.cell(row_idx, target_col).value
         if existing_name and str(existing_name).strip():
-            if not replace:
+            if str(user_name).strip() != str(existing_name).strip() and not replace:
                 logger.warning(f'Single name column at ch{chapter_value} {task} is occupied by "{existing_name}"')
                 return {
                     "success": False,
@@ -122,10 +127,18 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
         target_col = None
         for col in name_cols:
             cell_value = ws.cell(row_idx, col).value
-            if not cell_value or not str(cell_value).strip():
+            if cell_value == user_name:
                 target_col = col
-                logger.debug(f'Found empty name slot at column {col}')
+                logger.debug(f'Found existing name slot at column {col}')
                 break
+
+        if target_col is None:
+            for col in name_cols:
+                cell_value = ws.cell(row_idx, col).value
+                if not cell_value or not str(cell_value).strip():
+                    target_col = col
+                    logger.debug(f'Found empty name slot at column {col}')
+                    break
         
         if target_col is None:
             occupied_names = []
