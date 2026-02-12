@@ -123,10 +123,18 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
         target_col = None
         for col in name_cols:
             cell_value = ws.cell(row_idx, col).value
-            if not cell_value or not str(cell_value).strip():
+            if cell_value == user_name:
                 target_col = col
-                logger.debug(f'Found empty name slot at column {col}')
+                logger.debug(f'Found existing name slot at column {col}')
                 break
+
+        if target_col is None:
+            for col in name_cols:
+                cell_value = ws.cell(row_idx, col).value
+                if not cell_value or not str(cell_value).strip():
+                    target_col = col
+                    logger.debug(f'Found empty name slot at column {col}')
+                    break
         
         if target_col is None:
             occupied_names = []
