@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 token = str(os.getenv("TOKEN"))
 
+import event_listener
+
 @bot.event
 async def on_ready():
     logger.info(f'{bot.user} is ready and connected')
