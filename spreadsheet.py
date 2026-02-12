@@ -110,7 +110,7 @@ def update_task_entry_by_title(sheet_title: str, chapter_value: str | int | floa
         target_col = name_cols[0]
         existing_name = ws.cell(row_idx, target_col).value
         if existing_name and str(existing_name).strip():
-            if not replace:
+            if str(user_name).strip() != str(existing_name).strip() and not replace:
                 logger.warning(f'Single name column at ch{chapter_value} {task} is occupied by "{existing_name}"')
                 return {
                     "success": False,
